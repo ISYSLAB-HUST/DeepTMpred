@@ -3,6 +3,9 @@
 import argparse
 import torch
 import esm
+from torch import nn
+import torch.nn.functional as F
+
 from deepTMpred.model import OrientationNet
 import logging
 from torch.utils.data import DataLoader, random_split
@@ -18,6 +21,8 @@ handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+
 #####################################
 
 
@@ -60,7 +65,29 @@ def data_iter(data_path, pssm_dir, hmm_dir, batch_size, batch_converter, ratio=0
     return train_iter, val_iter
 
 
-def train(esm_model, model, optimizer, train_loader, epoch, device, pretrain_device, criterion):
+def linear_combination(x, y, epsilon):
+    return epsilon * x + (1 - epsilon) * y
+
+
+def reduce_loss(loss, reduction='mean'):
+    return loss.mean() if reduction == 'mean' else loss.sum() if reduction == 'sum' else loss
+
+
+class LabelSmoothingCrossEntropy(nn.Module):
+    def __init__(self, epsilon: float = 0.15, reduction='mean'):
+        super().__init__()
+        self.epsilon = epsilon
+        self.reduction = reduction
+
+    def forward(self, preds, target):
+        n = preds.size()[-1]
+        log_preds = F.log_softmax(preds, dim=-1)
+        loss = reduce_loss(-log_preds.sum(dim=-1), self.reduction)
+        nll = F.nll_loss(log_preds, target, reduction=self.reduction)
+        return linear_combination(loss / n, nll, self.epsilon)
+
+
+def train(esm_model, model, optimizer, train_loader, epoch, device, criterion):
     tp = 0
     tn = 0
     fp = 0
@@ -70,7 +97,7 @@ def train(esm_model, model, optimizer, train_loader, epoch, device, pretrain_dev
     model.train()
     esm_model.eval()
     for tokens, labels, matrix, _ in train_loader:
-        tokens = tokens.to(pretrain_device)
+        tokens = tokens.to(device)
         optimizer.zero_grad()
         with torch.no_grad():
             results = esm_model(tokens, repr_layers=[34])
@@ -98,7 +125,6 @@ def train(esm_model, model, optimizer, train_loader, epoch, device, pretrain_dev
         fn += torch.sum((predict != labels).masked_select(predict_mask_n)).item()
 
         total += labels.shape[0]
-    print(tp, fp, tn, fn, flush=True)
     metric = evaluate(tp, fp, tn, fn)
     logger.info(
         "Train--Epoch:{:0>3d}, Loss:{:.5f}, F1:{:.5f}, ACC:{:.2%}, MCC:{:.5f}".format(epoch, loss_accum / total,
@@ -107,7 +133,7 @@ def train(esm_model, model, optimizer, train_loader, epoch, device, pretrain_dev
                                                                                       metric.mcc_score))
 
 
-def test(esm_model, model, val_loader, epoch, device, pretrain_device, criterion):
+def test(esm_model, model, val_loader, epoch, device, criterion):
     tp = 0
     tn = 0
     fp = 0
@@ -118,7 +144,7 @@ def test(esm_model, model, val_loader, epoch, device, pretrain_device, criterion
     esm_model.eval()
     with torch.no_grad():
         for tokens, labels, feature, _ in val_loader:
-            tokens = tokens.to(pretrain_device)
+            tokens = tokens.to(device)
             results = esm_model(tokens, repr_layers=[34])
             # NOTE: token 0 is always a beginning-of-sequence token, so the first residue is token 1.
             token_embeddings = results["representations"][34][:, 1:, :]
@@ -145,7 +171,6 @@ def test(esm_model, model, val_loader, epoch, device, pretrain_device, criterion
 
             total += int(labels.shape[0])
 
-        print(tp, fp, tn, fn, flush=True)
         metric = evaluate(tp, fp, tn, fn)
         logger.info(
             "Val--Epoch:{:0>3d}, Loss:{:.5f}, F1:{:.5f}, ACC:{:.2%}, MCC:{:.5f}".format(epoch, loss_accum / total,
@@ -157,10 +182,8 @@ def test(esm_model, model, val_loader, epoch, device, pretrain_device, criterion
 
 def main(args):
     ###############
-    train_file = "/home/wanglei/data/TMP/dataset/orientation.fa"
-    pretrain = "/home/wanglei/.cache/torch/checkpoints/esm1_t34_670M_UR50S.pt"
-    finetune_model_path = "/home/wanglei/data/TMP/project/src/save_model" \
-                          "/esm_finetune_no_matrix_9_27_cnn_epoch_4_state_dict.pth "
+    train_file = "./dataset/total_seq.fa"
+    finetune_model_path = "./network_parameter_files/DeepTMpred_b_state_dict.pth"
 
     if args["matrix"]:
         pssm_dir = "/home/wanglei/data/TMP/dataset/orientation/pssm"
@@ -171,13 +194,11 @@ def main(args):
     num_epochs = args["num_epochs"]
     dropout = args["dropout"]
 
-    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_device = torch.device('cuda:0')
-    pretrain_device = torch.device('cuda:1')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    pretrain_model, alphabet = esm.pretrained.load_model_and_alphabet_local(pretrain)
+    pretrain_model, alphabet = esm.pretrained.esm.pretrained.esm1_t34_670M_UR50S()
     torch.cuda.empty_cache()
-    pretrain_model = pretrain_model.to(pretrain_device)
+    pretrain_model = pretrain_model.to(device)
     batch_converter = alphabet.get_batch_converter()
 
     model = OrientationNet(dropout=dropout)
@@ -187,7 +208,7 @@ def main(args):
     finetune_model_dict = {k: v for k, v in tmh_checkpoint.items() if k in model_state_dict.keys()}
     model_state_dict.update(finetune_model_dict)
     model.load_state_dict(model_state_dict)
-    model = model.to(model_device)
+    model = model.to(device)
 
     # -------------
     logger.info("load dataset....")
@@ -205,17 +226,13 @@ def main(args):
                                  lr=lr,
                                  weight_decay=l2)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=5)
-    nSamples = [227, 478]
-    normedWeights = [1 - item / sum(nSamples) for item in nSamples]
-    normedWeights = torch.FloatTensor(normedWeights).to(model_device)
-    criterion = torch.nn.CrossEntropyLoss(reduction='sum', weight=normedWeights)
+    criterion = LabelSmoothingCrossEntropy(reduction='sum')
     ###############
 
     for epoch in range(num_epochs):
-        train(pretrain_model, model, optimizer, train_iter, epoch, model_device, pretrain_device, criterion)
-        val_loss = test(pretrain_model, model, val_iter, epoch, model_device, pretrain_device, criterion)
+        train(pretrain_model, model, optimizer, train_iter, epoch, device, criterion)
+        val_loss = test(pretrain_model, model, val_iter, epoch, device, criterion)
         scheduler.step(val_loss)
-        # test(pretrain_model, model, test_iter, epoch, model_device, pretrain_device, criterion)
 
 
 if __name__ == "__main__":

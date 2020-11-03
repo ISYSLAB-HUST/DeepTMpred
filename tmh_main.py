@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # create a file handler
-handler = logging.FileHandler('esm_finetune_matrix_9_28_cnn.log')
+handler = logging.FileHandler('tmh_main.log')
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
@@ -237,9 +237,8 @@ def test(pretrain_model, model, test_loader, device, epoch):
 
 def main(args):
     ###############
-    train_file = "/home/wanglei/data/TMP/dataset/train_30_rm_test_with_label_topo.fa"
-    test_file = "/home/wanglei/data/TMP/dataset/test_label_with_topo.fa"
-    pretrain = "/home/wanglei/.cache/torch/checkpoints/esm1_t34_670M_UR50S.pt"
+    train_file = "./dataset/train_30.fa"
+    test_file = "./dataset/test.fa"
     if args["matirx"]:
         pssm_dir = "/home/wanglei/data/TMP/dataset/feature/pssm/train"
         test_pssm_dir = "/home/wanglei/data/TMP/dataset/feature/pssm/test"
@@ -253,7 +252,7 @@ def main(args):
     ###############
 
     logger.info("init model")
-    pretrain_model, alphabet = esm.pretrained.load_model_and_alphabet_local(pretrain)
+    pretrain_model, alphabet = esm.pretrained.pretrained.esm1_t34_670M_UR50S()
     batch_converter = alphabet.get_batch_converter()
     model = FineTuneEsmCNN()
     model = model.to(device)
