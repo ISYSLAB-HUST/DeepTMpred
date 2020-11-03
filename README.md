@@ -30,3 +30,7 @@ python orientaion_main.py &
 
 ### License
 [MIT](LICENSE)
+
+### Contact
+If you have any questions, comments, or would like to report a bug, please file a Github issue or 
+contact me at wanglei94@hust.edu.cn.
