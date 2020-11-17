@@ -46,8 +46,8 @@ def get_params():
     parser.add_argument('--clip', type=float, default=1.0,
                         help='gradient clipping max norm (default: 1.0)')
 
-    parser.add_argument('--matrix', type=bool, default=False,
-                        help='matrix (default: False)')
+    parser.add_argument('--matrix', action='store_true',
+                        help='flag of using the PSSM and HMM profile')
 
     args, _ = parser.parse_known_args()
     return args

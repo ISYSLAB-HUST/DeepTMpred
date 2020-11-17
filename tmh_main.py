@@ -42,8 +42,8 @@ def get_params():
     parser.add_argument('--dropout', type=float, default=0.5,
                         help='dropout (default: 0.5)')
 
-    parser.add_argument('--matirx', type=bool, default=False,
-                        help='matirx (default: False)')
+    parser.add_argument('--matrix', action='store_true',
+                        help='flag of using the PSSM and HMM profile')
     args, _ = parser.parse_known_args()
     return args
 
@@ -239,7 +239,7 @@ def main(args):
     ###############
     train_file = "./dataset/train_30.fa"
     test_file = "./dataset/test.fa"
-    if args["matirx"]:
+    if args["matrix"]:
         pssm_dir = "/home/wanglei/data/TMP/dataset/feature/pssm/train"
         test_pssm_dir = "/home/wanglei/data/TMP/dataset/feature/pssm/test"
         hmm_dir = "/home/wanglei/data/TMP/dataset/feature/hmm/train"
