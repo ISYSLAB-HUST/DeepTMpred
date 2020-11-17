@@ -240,10 +240,11 @@ def main(args):
     train_file = "./dataset/train_30.fa"
     test_file = "./dataset/test.fa"
     if args["matrix"]:
-        pssm_dir = "/home/wanglei/data/TMP/dataset/feature/pssm/train"
-        test_pssm_dir = "/home/wanglei/data/TMP/dataset/feature/pssm/test"
-        hmm_dir = "/home/wanglei/data/TMP/dataset/feature/hmm/train"
-        test_hmm_dir = "/home/wanglei/data/TMP/dataset/feature/hmm/test"
+        # TODO：generate PSSM matrix and HMM profile
+        pssm_dir = ""
+        test_pssm_dir = ""
+        hmm_dir = ""
+        test_hmm_dir = ""
     else:
         pssm_dir, test_pssm_dir, hmm_dir, test_hmm_dir = None, None, None, None
 

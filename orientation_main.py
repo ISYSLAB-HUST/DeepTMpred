@@ -186,8 +186,9 @@ def main(args):
     finetune_model_path = "./network_parameter_files/DeepTMpred_b_state_dict.pth"
 
     if args["matrix"]:
-        pssm_dir = "/home/wanglei/data/TMP/dataset/orientation/pssm"
-        hmm_dir = "/home/wanglei/data/TMP/dataset/orientation/hmm"
+        # TODO: generate PSSM matrix and HMM profile
+        pssm_dir = ""
+        hmm_dir = ""
     else:
         pssm_dir, hmm_dir = None, None
 
