@@ -103,12 +103,14 @@ class evaluate(object):
 
 def tmh_predict(id_list, predict_str):
     tmh = {}
-    for _id, predict in zip(id_list, predict_str):
+    cutoff = 5
+    for _id, predict, prob in zip(id_list, predict_str, prob):
         tmp = []
         predict = map(str, predict)
         for item in re.finditer(r'1+', ''.join(predict)):
-            tmp.append(item.span())
-        tmh[_id] = tmp
+            if (item.end()-item.start()-1) >= cutoff:
+                tmp.append([item.start()+1, item.end()])
+        tmh[_id] = {'topo':tmp, 'topo_proba':prob}
     return tmh
 
 

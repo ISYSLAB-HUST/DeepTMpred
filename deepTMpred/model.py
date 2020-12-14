@@ -49,10 +49,9 @@ class FineTuneEsmCNN(nn.Module):
         # loss = self.crf(x, labels, mask)
         out = self.crf.decode(x, mask)
         prob = []
-        x = torch.softmax(x, dim=2)
-        x = torch.max(x, dim=2)  # [batch, length]
-        for idx, item in enumerate(tokens_length):
-            prob.append(x[idx, :item].tolist())
+        x = F.softmax(x, dim=2)
+        for idx, item in enumerate(tokens_length.tolist()):
+            prob.append(x[idx, :item, 1].tolist())
         return out, prob
 
     def forward(self, x, tokens_length, labels):
