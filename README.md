@@ -7,27 +7,33 @@ self-supervised language models called ESM, convolutional neural networks, and c
 Compared with other tools, DeepTMpred can achieve state-of-the-art results and obtain pretty good prediction results for TMPs 
 lacking sufficient evolutionary information.
 
-![avatar](./images/g841.png)
+![avatar](./images/g841.png){:height="50%" width="50%"}
 
 ### Dependencies
-```shell script
-pip install git+https://github.com/facebookresearch/esm.git
-pip install -r requirements.txt
+
+We used the following Python packages for core development. We tested on Python 3.7.
+
 ```
-For reproducibility, we listed the packages used for generating the results in the paper, 
-but other versions of these packages will likely give similar results.
+biopython
+torch
+scikit-learn
+numpy
+```
 
 ### Dataset
 Orientations of Proteins in Membranes (OPM) database: https://opm.phar.umich.edu/download
 
-### TMH train and prediction
+### Pre-train model
+We only provide the parameter files of the DeepTMpred(12).
+All files can be downloaded from the following links: 
+- [DeepTMpred-a](https://osf.io/2z6r9)
+- [DeepTMpred-b](https://osf.io/2z6r9)
+
+
+
+### TMH prediction
 ```shell script
 python tmh_main.py &
-```
-
-### Orientation train and prediction
-```shell script
-python orientaion_main.py &
 ```
 
 ### License

@@ -1,12 +1,9 @@
-"""
-model: Topology and Orientation
-"""
-
 import torch
 from torch import nn
 from torch.nn import init
 import torch.nn.functional as F
-from deepTMpred.crf import CRF
+from .crf import CRF
+from typing import Dict, Iterable, Callable
 
 
 def length_to_mask(length, max_len=None, dtype=None):
@@ -24,18 +21,20 @@ def length_to_mask(length, max_len=None, dtype=None):
 
 
 class FineTuneEsmCNN(nn.Module):
-    def __init__(self):
+    def __init__(self, esm_dim, dropout=0.5):
         super(FineTuneEsmCNN, self).__init__()
-        self.liner1 = nn.Linear(1280 + 50, 64)
+        self.liner1 = nn.Linear(esm_dim + 50, 32)
         # self.bn1 = nn.BatchNorm1d(64)
-        self.cov = nn.Conv1d(64, 16, kernel_size=3, padding=1)
+        self.cov = nn.Conv1d(32, 16, kernel_size=3, padding=1)
         # self.bn2 = nn.BatchNorm1d(16)
         self.liner2 = nn.Linear(16, 2)
+        self.dropout = dropout
 
         self.crf = CRF(2, batch_first=True)
 
     def _get_emission(self, x):
-        x = F.relu(self.liner1(x))  # [batch, length, 1280]==>[batch, length, 64]
+        x = F.dropout(self.liner1(x), p=self.dropout,
+                      training=self.training)  # [batch, length, 1280]==>[batch, length, 64]
         x = x.permute(0, 2, 1).contiguous()
         x = self.cov(x)  # [batch, length, 64]==>[batch, length, 16]
         x = F.relu(x)
@@ -62,13 +61,38 @@ class FineTuneEsmCNN(nn.Module):
         return -loss, out
 
 
+class FeatureExtractor(nn.Module):
+    def __init__(self, model: nn.Module, layers: Iterable[str]):
+        super().__init__()
+        self.model = model
+        self.layers = layers
+        self._features = {layer: torch.empty(0) for layer in layers}
+
+        for layer_id in layers:
+            layer = dict([*self.model.named_modules()])[layer_id]
+            layer.register_forward_hook(self.save_outputs_hook(layer_id))
+
+    def save_outputs_hook(self, layer_id: str) -> Callable:
+        def fn(_, __, output):
+            self._features[layer_id] = output
+
+        return fn
+
+    def forward(self, x, x1, x2):
+        _ = self.model(x, x1, x2)
+        return self._features
+
+
 class OrientationNet(nn.Module):
-    def __init__(self, input_size=64, dropout=0.5):
+    def __init__(self, input_size=32, dropout=0.5):
         super(OrientationNet, self).__init__()
 
-        self.input_szie = input_size
-        self.liner1 = nn.Linear(1280 + 50, 64)
-        # self.w = nn.Parameter(torch.Tensor(self.input_szie, 1))
+        # self.input_szie = input_size
+        self.liner1 = nn.Linear(768 + 50, input_size)
+        # self.cov = nn.Conv1d(64, 16, kernel_size=3, padding=1)
+        # for i in self.cov.parameters():
+        #     i.requires_grad = False
+        self.w = nn.Parameter(torch.Tensor(input_size, 1))
 
         self.dense = nn.Linear(input_size, 8)
         self.dropout = nn.Dropout(p=dropout)
@@ -81,14 +105,26 @@ class OrientationNet(nn.Module):
                 init.xavier_normal_(param)
             elif 'bias' in name:
                 init.normal_(param)
+        nn.init.uniform_(self.w)
 
-    def forward(self, x):
+    def forward(self, x, topo):
+        # print("x", x.device)
+        # print("w", self.w.device)
+        # x = x[:,]
         x = F.relu(self.liner1(x))
-        # alpha = F.softmax(torch.matmul(x, self.w), dim=1)  # [batch, length, 1]
 
-        # out = x * alpha  # [batch, length, 64]
-        # out = torch.sum(out, 1)  # [batch, 64]
-        out = x[:, 0, :]
+        x = torch.cat((x[:, :5, :], x[:, -5:, :]), dim=1)  # [batch, 10, input_size]
+        # x = torch.index_select(x, dim=1, index=topo)
+
+        alpha = F.softmax(torch.matmul(x, self.w), dim=1)  # [batch, max_length, 1]
+
+        out = x * alpha  # [batch, length, 64]
+        out = torch.sum(out, 1)  # [batch, 64]
+        # out = torch.mean(x, dim=1)
+        # out = x[:, 0, :]
+        # out = torch.mean(out, dim=1)
+        out = F.relu(out)
         out = F.relu(self.dropout(self.dense(out)))  # [batch, 16]
         out = self.fc(out)
+        # out = self.dense(out)
         return out
