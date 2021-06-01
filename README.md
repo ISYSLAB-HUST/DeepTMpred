@@ -7,7 +7,7 @@ self-supervised language models called ESM, convolutional neural networks, and c
 Compared with other tools, DeepTMpred can achieve state-of-the-art results and obtain pretty good prediction results for TMPs 
 lacking sufficient evolutionary information.
 
-![avatar](./images/g841.png){:height="50%" width="50%"}
+![avatar](./images/g841.png)
 
 ### Dependencies
 
