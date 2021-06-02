@@ -26,8 +26,8 @@ Orientations of Proteins in Membranes (OPM) database: https://opm.phar.umich.edu
 ### Pre-train model
 We only provide the parameter files of the DeepTMpred(12).
 All files can be downloaded from the following links: 
-- [DeepTMpred-a](https://osf.io/2z6r9)
-- [DeepTMpred-b](https://osf.io/2z6r9)
+- [DeepTMpred-a](https://zenodo.org/record/4891983/files/tmh_12_a.pth?download=1)
+- [DeepTMpred-b](https://zenodo.org/record/4891983/files/tmh_12_b.pth?download=1)
 
 
 
