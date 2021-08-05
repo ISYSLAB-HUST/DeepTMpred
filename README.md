@@ -1,13 +1,13 @@
 ## Improving the topology prediction of alpha-helical transmembrane proteins with transfer learning
 
 ### Abstract
-We consider that the pre-training language model can make most use of massive unlabeled protein sequence data to learn 
-general feature representations for TMPs. Therefore, we proposed a transfer learning method, DeepTMpred, using pre-trained 
-self-supervised language models called ESM, convolutional neural networks, and conditional random fields for alpha-TMP topology prediction. 
-Compared with other tools, DeepTMpred can achieve state-of-the-art results and obtain pretty good prediction results for TMPs 
-lacking sufficient evolutionary information.
+Considering that the pre-trained language model can make full use of massive unlabeled protein 
+sequences to obtain latent feature representation for TMPs
+and reduce the dependence on evolutionary information, we proposed DeepTMpred, 
+which used pre-trained self-supervised language models called ESM, convolutional neural networks, 
+attentive neural network and conditional random fields for alpha-TMP topology prediction. 
 
-![avatar](./images/g841.png)
+![avatar](./images/figure1.jpg)
 
 ### Dependencies
 
@@ -24,16 +24,15 @@ numpy
 Orientations of Proteins in Membranes (OPM) database: https://opm.phar.umich.edu/download
 
 ### Pre-train model
-We only provide the parameter files of the DeepTMpred(12).
-All files can be downloaded from the following links: 
-- [DeepTMpred-a](https://zenodo.org/record/4891983/files/tmh_12_a.pth?download=1)
-- [DeepTMpred-b](https://zenodo.org/record/4891983/files/tmh_12_b.pth?download=1)
+We only provide the parameter files of the DeepTMpred-b.
 
-
+```shell script
+sh ./script/download.sh
+```
 
 ### TMH prediction
 ```shell script
-python tmh_main.py &
+python tmh_main.py tmh_model_path orientation_model_path &
 ```
 
 ### License
