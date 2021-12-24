@@ -36,7 +36,7 @@ def test(model, orientation_model, test_loader, device):
 
 def main():
     ###############
-    test_file = "./dataset/test.fa"
+    test_file = sys.argv[3]
     tmh_model_path = sys.argv[1]
     orientation_model_path = sys.argv[2]
     device = torch.device('cpu')

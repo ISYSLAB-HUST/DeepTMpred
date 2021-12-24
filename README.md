@@ -30,9 +30,11 @@ We only provide the parameter files of the DeepTMpred-b.
 sh ./script/download.sh
 ```
 
-### TMH prediction
+### TMH prediction 
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ISYSLAB-HUST/DeepTMpred/notebook/test.ipynb]
 ```shell script
-python tmh_main.py tmh_model_path orientation_model_path &
+python tmh_main.py tmh_model_path orientation_model_path your_fasta_file &
 ```
 
 ### License

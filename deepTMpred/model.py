@@ -107,7 +107,7 @@ class OrientationNet(nn.Module):
                 init.normal_(param)
         nn.init.uniform_(self.w)
 
-    def forward(self, x, topo):
+    def forward(self, x):
         # print("x", x.device)
         # print("w", self.w.device)
         # x = x[:,]
