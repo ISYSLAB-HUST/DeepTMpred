@@ -32,7 +32,8 @@ sh ./script/download.sh
 
 ### TMH prediction 
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ISYSLAB-HUST/DeepTMpred/notebook/test.ipynb]
+[<img src="https://colab.research.google.com/assets/colab-badge.svg">](https://colab.research.google.com/github/ISYSLAB-HUST/DeepTMpred/blob/master/notebook/test.ipynb]
+
 ```shell script
 python tmh_main.py tmh_model_path orientation_model_path your_fasta_file &
 ```
