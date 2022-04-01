@@ -30,13 +30,17 @@ We only provide the parameter files of the DeepTMpred-b.
 sh ./script/download.sh
 ```
 
-### TMH prediction 
-
-[<img src="https://colab.research.google.com/assets/colab-badge.svg">](https://colab.research.google.com/github/ISYSLAB-HUST/DeepTMpred/blob/master/notebook/test.ipynb)
+### TMPs prediction script
 
 ```shell script
 python tmh_main.py tmh_model_path orientation_model_path your_fasta_file &
 ```
+
+### colab notebook [<img src="https://colab.research.google.com/assets/colab-badge.svg">](https://colab.research.google.com/github/ISYSLAB-HUST/DeepTMpred/blob/master/notebook/test.ipynb)
+
+   - Single Sequence Prediction
+   - Long Sequence Prediction(length>1024)
+   - Batch Sequence Prediction
 
 ### Result 
 
