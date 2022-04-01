@@ -38,6 +38,11 @@ sh ./script/download.sh
 python tmh_main.py tmh_model_path orientation_model_path your_fasta_file &
 ```
 
+### Result 
+
+ - Baidu disk：https://pan.baidu.com/s/16UG9vD94_kSkn7D7dZ5zdQ 
+ - Password：rq3x
+
 ### License
 [MIT](LICENSE)
 
