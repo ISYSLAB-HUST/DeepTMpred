@@ -3,6 +3,8 @@ utils
 """
 
 import re
+import esm
+from argparse import Namespace
 
 
 def tmh_predict(id_list, predict_str, prob, orientation):
@@ -17,3 +19,18 @@ def tmh_predict(id_list, predict_str, prob, orientation):
         tmh[_id] = {'topo':tmp, 'topo_proba':prob, 'orientation':ori}
     return tmh
 
+
+def load_model_and_alphabet_core(args_dict, regression_data=None):
+    alphabet = esm.Alphabet.from_architecture(args_dict["args"].arch)
+
+    # upgrade state dict
+    pra = lambda s: "".join(s.split("decoder_")[1:] if "decoder" in s else s)
+    prs = lambda s: "".join(s.split("decoder.")[1:] if "decoder" in s else s)
+    model_args = {pra(arg[0]): arg[1] for arg in vars(args_dict["args"]).items()}
+    model_type = esm.ProteinBertModel
+
+    model = model_type(
+        Namespace(**model_args),
+        alphabet,
+    )
+    return model, alphabet
