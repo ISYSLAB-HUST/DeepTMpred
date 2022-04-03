@@ -6,7 +6,7 @@ import sys
 import torch
 import esm
 from deepTMpred.model import FineTuneEsmCNN, OrientationNet
-from deepTMpred.utils import tmh_predict
+from deepTMpred.utils import tmh_predict, load_model_and_alphabet_core
 from torch.utils.data import DataLoader
 from deepTMpred.data import FineTuneDataset, batch_collate
 
@@ -43,7 +43,9 @@ def main():
     ###############
 
     model = FineTuneEsmCNN(768)
-    pretrain_model, alphabet = esm.pretrained.esm1_t12_85M_UR50S()
+    # pretrain_model, alphabet = esm.pretrained.esm1_t12_85M_UR50S()
+    args_dict = torch.load('./args.pt')
+    pretrain_model, alphabet = load_model_and_alphabet_core(args_dict)
     batch_converter = alphabet.get_batch_converter()
     model.add_module('esm', pretrain_model.to(device))
     model.load_state_dict(torch.load(tmh_model_path))
