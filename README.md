@@ -1,5 +1,5 @@
 ## Improving the topology prediction of alpha-helical transmembrane proteins with transfer learning
-
+> *We will release the latest version of DeepTMpred, refactor the entire code, and provide a web server!*
 ### Abstract
 Considering that the pre-trained language model can make full use of massive unlabeled protein 
 sequences to obtain latent feature representation for TMPs
